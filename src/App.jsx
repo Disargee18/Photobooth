@@ -24,33 +24,6 @@ function PhotoboothApp() {
   const [isSequenceRunning, setIsSequenceRunning] = useState(false);
   const [captureCount, setCaptureCount] = useState(0);
   const [view, setView] = useState('camera'); // 'camera' or 'result'
-  const [scaleInfo, setScaleInfo] = useState({ scale: 1, height: 'auto' });
-
-  // Dynamically scale the entire app content down to fit within the viewport height
-  useEffect(() => {
-    const updateScale = () => {
-      if (!mainRef.current) return;
-      // offsetHeight ignores CSS transform: scale, giving us the true original height
-      const originalHeight = mainRef.current.offsetHeight;
-      if (originalHeight === 0) return;
-
-      const availableHeight = window.innerHeight - 40; // leave 40px safe margin
-      if (originalHeight > availableHeight) {
-        const scale = availableHeight / originalHeight;
-        setScaleInfo({ scale, height: originalHeight * scale });
-      } else {
-        setScaleInfo({ scale: 1, height: 'auto' });
-      }
-    };
-
-    // Timeout allows DOM to render before calculating height
-    const timeoutId = setTimeout(updateScale, 50);
-    window.addEventListener('resize', updateScale);
-    return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', updateScale);
-    };
-  }, [view, photos, activeFilter]);
 
   const startCaptureSequence = () => {
     setPhotos([]);
@@ -156,13 +129,11 @@ function PhotoboothApp() {
       <p>Hello baby patry ng photobooth ko pls thank you i love you</p>
 
       <main
-        className="container mx-auto px-4 print:p-0 flex-1 flex justify-center print:!h-auto print:!block"
-        style={{ height: scaleInfo.height }}
+        className="container mx-auto px-4 print:p-0 flex-1 flex justify-center py-8"
       >
         <div
           ref={mainRef}
           className="w-full print:!transform-none"
-          style={{ transform: `scale(${scaleInfo.scale})`, transformOrigin: 'top center' }}
         >
           {/* <HeroSection /> */}
 
@@ -202,18 +173,18 @@ function PhotoboothApp() {
             <motion.div
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full mx-auto flex flex-col md:flex-row gap-8 md:gap-16 justify-center items-center my-8"
+              className="w-full mx-auto flex flex-col lg:flex-row gap-8 lg:gap-16 justify-center items-center lg:items-start my-8"
             >
               {/* Left side: Photo Strip */}
-              <div className="flex justify-center">
+              <div className="flex justify-center w-full lg:w-auto">
                 <PhotoStrip photos={photos} activeFilter={activeFilter} />
               </div>
 
               {/* Right side: Controls */}
-              <div className="flex flex-col gap-8 justify-center print:hidden w-full max-w-sm">
+              <div className="flex flex-col gap-6 lg:gap-8 justify-center print:hidden w-full max-w-sm lg:mt-12">
                 <BackgroundSwitcher />
 
-                <div className="flex flex-col gap-6 w-full">
+                <div className="flex flex-col gap-4 lg:gap-6 w-full">
                   <button
                     onClick={downloadGIF}
                     className="bauhaus-button px-6 py-4 flex items-center justify-center gap-4 text-3xl bg-white w-full border-4 border-black"
