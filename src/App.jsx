@@ -153,13 +153,13 @@ function PhotoboothApp() {
 
   return (
     <div className="min-h-screen bg-[var(--color-bauhaus-white)] overflow-x-hidden flex flex-col">
-      {/* <Navbar /> */}
+      <p>Hello baby patry ng photobooth ko pls thank you i love you</p>
 
-      <main 
+      <main
         className="container mx-auto px-4 print:p-0 flex-1 flex justify-center print:!h-auto print:!block"
         style={{ height: scaleInfo.height }}
       >
-        <div 
+        <div
           ref={mainRef}
           className="w-full print:!transform-none"
           style={{ transform: `scale(${scaleInfo.scale})`, transformOrigin: 'top center' }}
@@ -167,77 +167,77 @@ function PhotoboothApp() {
           {/* <HeroSection /> */}
 
           {view === 'camera' && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="print:hidden"
-          >
-            <CameraView
-              videoRef={videoRef}
-              canvasRef={canvasRef}
-              activeFilter={activeFilter}
-              setActiveFilter={setActiveFilter}
-            />
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="print:hidden"
+            >
+              <CameraView
+                videoRef={videoRef}
+                canvasRef={canvasRef}
+                activeFilter={activeFilter}
+                setActiveFilter={setActiveFilter}
+              />
 
-            <div className="flex justify-center my-8">
-              <button
-                onClick={startCaptureSequence}
-                disabled={isSequenceRunning}
-                className="bauhaus-button px-12 py-4 text-4xl disabled:opacity-50"
-              >
-                SNAP PHOTO
-              </button>
-            </div>
-          </motion.div>
-        )}
-
-        <CountdownCapture
-          isCounting={isCounting}
-          onCapture={capturePhoto}
-          onFinished={handleCaptureFinished}
-        />
-
-        {view === 'result' && (
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="w-full mx-auto flex flex-col md:flex-row gap-8 md:gap-16 justify-center items-center my-8"
-          >
-            {/* Left side: Photo Strip */}
-            <div className="flex justify-center">
-              <PhotoStrip photos={photos} activeFilter={activeFilter} />
-            </div>
-
-            {/* Right side: Controls */}
-            <div className="flex flex-col gap-8 justify-center print:hidden w-full max-w-sm">
-              <BackgroundSwitcher />
-
-              <div className="flex flex-col gap-6 w-full">
+              <div className="flex justify-center my-8">
                 <button
-                  onClick={downloadGIF}
-                  className="bauhaus-button px-6 py-4 flex items-center justify-center gap-4 text-3xl bg-white w-full border-4 border-black"
+                  onClick={startCaptureSequence}
+                  disabled={isSequenceRunning}
+                  className="bauhaus-button px-12 py-4 text-4xl disabled:opacity-50"
                 >
-                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  DOWNLOAD AS GIF
-                </button>
-
-                <PrintButton disabled={photos.length === 0} />
-
-                <button
-                  onClick={resetToCamera}
-                  className="bauhaus-button px-8 py-4 text-3xl bg-white border-4 border-black w-full"
-                >
-                  TAKE ANOTHER
+                  SNAP PHOTO
                 </button>
               </div>
-            </div>
-          </motion.div>
-        )}
+            </motion.div>
+          )}
+
+          <CountdownCapture
+            isCounting={isCounting}
+            onCapture={capturePhoto}
+            onFinished={handleCaptureFinished}
+          />
+
+          {view === 'result' && (
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="w-full mx-auto flex flex-col md:flex-row gap-8 md:gap-16 justify-center items-center my-8"
+            >
+              {/* Left side: Photo Strip */}
+              <div className="flex justify-center">
+                <PhotoStrip photos={photos} activeFilter={activeFilter} />
+              </div>
+
+              {/* Right side: Controls */}
+              <div className="flex flex-col gap-8 justify-center print:hidden w-full max-w-sm">
+                <BackgroundSwitcher />
+
+                <div className="flex flex-col gap-6 w-full">
+                  <button
+                    onClick={downloadGIF}
+                    className="bauhaus-button px-6 py-4 flex items-center justify-center gap-4 text-3xl bg-white w-full border-4 border-black"
+                  >
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    DOWNLOAD AS GIF
+                  </button>
+
+                  <PrintButton disabled={photos.length === 0} />
+
+                  <button
+                    onClick={resetToCamera}
+                    className="bauhaus-button px-8 py-4 text-3xl bg-white border-4 border-black w-full"
+                  >
+                    TAKE ANOTHER
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
         </div>
       </main>
 
