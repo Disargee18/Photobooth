@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import gifshot from 'gifshot';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
+import { TemplateProvider, useTemplate } from './context/TemplateContext';
 import Navbar from './components/Navbar';
 import HeroSection from './components/HeroSection';
+import TemplatePicker from './components/TemplatePicker';
 import CameraView from './components/CameraView';
 import BackgroundSwitcher from './components/BackgroundSwitcher';
 import CountdownCapture from './components/CountdownCapture';
@@ -13,6 +15,7 @@ import Footer from './components/Footer';
 
 function PhotoboothApp() {
   const { activeBg } = useTheme();
+  const { selectedTemplate, setSelectedTemplate } = useTemplate();
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -23,7 +26,7 @@ function PhotoboothApp() {
   const [isCounting, setIsCounting] = useState(false);
   const [isSequenceRunning, setIsSequenceRunning] = useState(false);
   const [captureCount, setCaptureCount] = useState(0);
-  const [view, setView] = useState('camera'); // 'camera' or 'result'
+  const [view, setView] = useState('template'); // 'template' -> 'camera' -> 'result'
   const [scaleInfo, setScaleInfo] = useState({ scale: 1, height: 'auto' });
 
   // Dynamically scale the app content down to fit within the viewport height, 
@@ -69,9 +72,9 @@ function PhotoboothApp() {
       const canvas = canvasRef.current;
 
       if (video.videoWidth && video.videoHeight) {
-        // Crop the video stream to a 3:4 aspect ratio
+        // Crop the video stream to the selected template's aspect ratio
         const videoAspect = video.videoWidth / video.videoHeight;
-        const targetAspect = 3 / 4;
+        const targetAspect = selectedTemplate ? selectedTemplate.aspectRatio : 3 / 4;
 
         let cropWidth = video.videoWidth;
         let cropHeight = video.videoHeight;
@@ -151,7 +154,9 @@ function PhotoboothApp() {
     const nextCount = captureCount + 1;
     setCaptureCount(nextCount);
 
-    if (nextCount < 3) {
+    const maxSlots = selectedTemplate ? selectedTemplate.slots : 3;
+
+    if (nextCount < maxSlots) {
       setTimeout(() => {
         setIsCounting(true);
       }, 1000);
@@ -200,80 +205,122 @@ function PhotoboothApp() {
           className="w-full print:!transform-none"
           style={view === 'camera' ? { transform: `scale(${scaleInfo.scale})`, transformOrigin: 'top center' } : {}}
         >
-          {/* <HeroSection /> */}
+          <AnimatePresence mode="wait">
+            {view === 'template' && (
+              <motion.div
+                key="template"
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5 }}
+                className="w-full"
+              >
+                <TemplatePicker onConfirm={() => setView('camera')} />
+              </motion.div>
+            )}
 
-          {view === 'camera' && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="print:hidden"
-            >
-              <CameraView
-                videoRef={videoRef}
-                canvasRef={canvasRef}
-                activeFilter={activeFilter}
-                setActiveFilter={setActiveFilter}
-              />
+            {view === 'camera' && (
+              <motion.div
+                key="camera"
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.5 }}
+                className="print:hidden w-full max-w-4xl mx-auto"
+              >
+                <div className="flex justify-between items-center mb-4">
+                  <button
+                    onClick={() => setView('template')}
+                    className="text-black font-[var(--font-special)] font-bold uppercase underline hover:no-underline"
+                  >
+                    &larr; Change Layout
+                  </button>
+                  {selectedTemplate && (
+                    <div className="bg-black text-white px-4 py-1 font-[var(--font-special)] text-sm tracking-wider">
+                      {selectedTemplate.name} SELECTED
+                    </div>
+                  )}
+                </div>
 
-              <div className="flex justify-center my-8">
-                <button
-                  onClick={startCaptureSequence}
-                  disabled={isSequenceRunning}
-                  className="bauhaus-button px-12 py-4 text-4xl disabled:opacity-50"
-                >
-                  SNAP PHOTO
-                </button>
-              </div>
-            </motion.div>
-          )}
+                <CameraView
+                  videoRef={videoRef}
+                  canvasRef={canvasRef}
+                  activeFilter={activeFilter}
+                  setActiveFilter={setActiveFilter}
+                />
+
+                <div className="flex justify-center my-8">
+                  <button
+                    onClick={startCaptureSequence}
+                    disabled={isSequenceRunning}
+                    className="bauhaus-button px-12 py-4 text-4xl disabled:opacity-50"
+                  >
+                    SNAP PHOTO
+                  </button>
+                </div>
+              </motion.div>
+            )}
+
+            {view === 'result' && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 50 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.5 }}
+                className="w-full mx-auto flex flex-col lg:flex-row gap-8 lg:gap-16 justify-center items-center lg:items-start my-8 print:m-0"
+              >
+                {/* Left side: Photo Strip */}
+                <div className="flex justify-center w-full lg:w-auto">
+                  <PhotoStrip photos={photos} activeFilter={activeFilter} />
+                </div>
+
+                {/* Right side: Controls */}
+                <div className="flex flex-col gap-6 lg:gap-8 justify-center print:hidden w-full max-w-sm lg:mt-12">
+                  <BackgroundSwitcher />
+
+                  <div className="flex flex-col gap-4 lg:gap-6 w-full">
+                    <button
+                      onClick={downloadGIF}
+                      className="bauhaus-button px-6 py-4 flex items-center justify-center gap-4 text-3xl bg-white w-full border-4 border-black"
+                    >
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="7 10 12 15 17 10" />
+                        <line x1="12" y1="15" x2="12" y2="3" />
+                      </svg>
+                      DOWNLOAD AS GIF
+                    </button>
+
+                    <PrintButton disabled={photos.length === 0} />
+
+                    <button
+                      onClick={resetToCamera}
+                      className="bauhaus-button px-8 py-4 text-3xl bg-white border-4 border-black w-full mb-4"
+                    >
+                      TAKE ANOTHER
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setPhotos([]);
+                        setView('template');
+                      }}
+                      className="text-black font-[var(--font-special)] font-bold underline hover:no-underline text-center"
+                    >
+                      Change Layout
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <CountdownCapture
             isCounting={isCounting}
             onCapture={capturePhoto}
             onFinished={handleCaptureFinished}
           />
-
-          {view === 'result' && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="w-full mx-auto flex flex-col lg:flex-row gap-8 lg:gap-16 justify-center items-center lg:items-start my-8 print:m-0"
-            >
-              {/* Left side: Photo Strip */}
-              <div className="flex justify-center w-full lg:w-auto">
-                <PhotoStrip photos={photos} activeFilter={activeFilter} />
-              </div>
-
-              {/* Right side: Controls */}
-              <div className="flex flex-col gap-6 lg:gap-8 justify-center print:hidden w-full max-w-sm lg:mt-12">
-                <BackgroundSwitcher />
-
-                <div className="flex flex-col gap-4 lg:gap-6 w-full">
-                  <button
-                    onClick={downloadGIF}
-                    className="bauhaus-button px-6 py-4 flex items-center justify-center gap-4 text-3xl bg-white w-full border-4 border-black"
-                  >
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                      <polyline points="7 10 12 15 17 10" />
-                      <line x1="12" y1="15" x2="12" y2="3" />
-                    </svg>
-                    DOWNLOAD AS GIF
-                  </button>
-
-                  <PrintButton disabled={photos.length === 0} />
-
-                  <button
-                    onClick={resetToCamera}
-                    className="bauhaus-button px-8 py-4 text-3xl bg-white border-4 border-black w-full"
-                  >
-                    TAKE ANOTHER
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
         </div>
       </main>
 
@@ -287,7 +334,9 @@ function PhotoboothApp() {
 export default function App() {
   return (
     <ThemeProvider>
-      <PhotoboothApp />
+      <TemplateProvider>
+        <PhotoboothApp />
+      </TemplateProvider>
     </ThemeProvider>
   );
 }

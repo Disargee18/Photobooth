@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTemplate } from '../context/TemplateContext';
 
 export default function CameraView({ videoRef, canvasRef, activeFilter, setActiveFilter }) {
   const [cameraError, setCameraError] = useState(null);
+  const { selectedTemplate } = useTemplate();
+  const aspectRatio = selectedTemplate ? selectedTemplate.aspectRatio : 3/4;
 
   useEffect(() => {
     async function startCamera() {
@@ -38,18 +41,24 @@ export default function CameraView({ videoRef, canvasRef, activeFilter, setActiv
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center w-full max-w-sm md:max-w-md lg:max-w-lg mx-auto my-4 lg:my-8 px-4"
+      className="flex flex-col items-center w-full max-w-md md:max-w-2xl lg:max-w-4xl mx-auto my-4 lg:my-8 px-4"
     >
       <div className="w-full bg-white p-4 bauhaus-border bauhaus-shadow relative">
         <div className="absolute -top-3 -left-3 w-6 h-6 lg:w-8 lg:h-8 bg-black rounded-full z-10 border-2 border-white"></div>
         <div className="absolute -top-3 -right-3 w-6 h-6 lg:w-8 lg:h-8 bg-black rounded-full z-10 border-2 border-white"></div>
         
         {cameraError ? (
-          <div className="w-full aspect-[3/4] bg-[#0a0a0a] text-white flex items-center justify-center font-[var(--font-special)] p-4 text-center">
+          <div 
+            className="w-full bg-[#0a0a0a] text-white flex items-center justify-center font-[var(--font-special)] p-4 text-center"
+            style={{ aspectRatio }}
+          >
             {cameraError}
           </div>
         ) : (
-          <div className="w-full aspect-[3/4] bg-black overflow-hidden relative border-4 border-black">
+          <div 
+            className="w-full bg-black overflow-hidden relative border-4 border-black transition-all duration-500"
+            style={{ aspectRatio }}
+          >
             <video 
               ref={videoRef} 
               autoPlay 
